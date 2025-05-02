@@ -21,6 +21,11 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center'
   },
+  modalButtonsContainer: {
+    display: 'flex',
+    gap: '8px',
+    alignItems: 'center'
+  },
   // Notes specific styles
   notesLink: {
     color: '#4338ca',
@@ -109,6 +114,27 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: '16px'
+  },
+  // Add new styles
+  complexityContainer: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '16px',
+    marginTop: '16px',
+    marginBottom: '16px'
+  },
+
+  complexityBox: {
+    backgroundColor: '#f3f4f6',
+    padding: '12px',
+    borderRadius: '4px',
+    border: '1px solid #e5e7eb'
+  },
+
+  complexityLabel: {
+    fontWeight: 'bold',
+    marginBottom: '4px',
+    color: '#374151'
   },
   statsGrid: {
     display: 'grid',
@@ -244,6 +270,15 @@ const styles = {
   checkbox: {
     marginRight: '8px'
   },
+  editButton: {
+    backgroundColor: '#4f46e5',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    padding: '8px 16px',
+    cursor: 'pointer',
+    marginLeft: '8px'
+  },
   submitButton: (disabled) => ({
     width: '100%',
     padding: '8px',
@@ -341,6 +376,7 @@ const App = () => {
   const [showStats, setShowStats] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
   const [selectedNotes, setSelectedNotes] = useState(null);
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
   
   // Add new problem
   const [newProblem, setNewProblem] = useState({
@@ -349,6 +385,8 @@ const App = () => {
     difficulty: 'Medium',
     date: new Date().toISOString().split('T')[0],
     notes: '',
+    timeComplexity: '',
+    spaceComplexity: '',
     categories: []
   });
   
@@ -647,14 +685,104 @@ const App = () => {
           <div style={styles.notesModal}>
             <div style={styles.notesModalContent}>
               <div style={styles.cardHeader}>
-                <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0 }}>Notes for Problem #{selectedNotes.number}: {}selectedNotes.title</h2>
-                <button onClick={() => setSelectedNotes(null)}  style={styles.closeButton}>
-                  <X size={20} />
-                </button>
+                <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0 }}>Notes for Problem #{selectedNotes.number}: {selectedNotes.title}</h2>
+                <div style={styles.modalButtonsContainer}>
+                  <button 
+                    onClick={() => {
+                      setIsEditingNotes(false);
+                      setSelectedNotes(null);
+                    }} 
+                    style={styles.closeButton}
+                  >
+                    <X size={20} />
+                  </button>
+                  {!isEditingNotes && (
+                    <button 
+                      onClick={() => setIsEditingNotes(true)} 
+                      style={styles.editButton}
+                    >
+                      Edit Notes
+                    </button>
+                  )}
+                </div>
               </div>
-              <div style={styles.formattedNotes}>
-                {selectedNotes.notes}
-              </div>
+              {isEditingNotes ? (
+                <div>
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Solution Notes</label>
+                    <textarea
+                      style={{
+                        ...styles.textArea,
+                        fontFamily: 'monospace',
+                        height: '200px'
+                      }}
+                      value={selectedNotes.notes}
+                      onChange={(e) => setSelectedNotes({
+                        ...selectedNotes,
+                        notes: e.target.value
+                      })}
+                      placeholder="Describe your approach and solution..."
+                    />
+                  </div>
+                  
+                  <div style={styles.complexityContainer}>
+                    <div style={styles.formGroup}>
+                      <label style={styles.label}>Time Complexity</label>
+                      <input
+                        style={styles.input}
+                        value={selectedNotes.timeComplexity}
+                        onChange={(e) => setSelectedNotes({
+                          ...selectedNotes,
+                          timeComplexity: e.target.value
+                        })}
+                        placeholder="e.g., O(n)"
+                      />
+                    </div>
+                    
+                    <div style={styles.formGroup}>
+                      <label style={styles.label}>Space Complexity</label>
+                      <input
+                        style={styles.input}
+                        value={selectedNotes.spaceComplexity}
+                        onChange={(e) => setSelectedNotes({
+                          ...selectedNotes,
+                          spaceComplexity: e.target.value
+                        })}
+                        placeholder="e.g., O(1)"
+                      />
+                    </div>
+                  </div>
+                  
+                  <button
+                    style={styles.submitButton(false)}
+                    onClick={() => {
+                      setProblems(problems.map(p => 
+                        p.id === selectedNotes.id ? selectedNotes : p
+                      ));
+                      setIsEditingNotes(false);
+                    }}
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <div style={styles.formattedNotes}>
+                    {selectedNotes.notes}
+                  </div>
+                  
+                  <div style={styles.complexityContainer}>
+                    <div style={styles.complexityBox}>
+                      <div style={styles.complexityLabel}>Time Complexity</div>
+                      {selectedNotes.timeComplexity || 'Not specified'}
+                    </div>
+                    <div style={styles.complexityBox}>
+                      <div style={styles.complexityLabel}>Space Complexity</div>
+                      {selectedNotes.spaceComplexity || 'Not specified'}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
